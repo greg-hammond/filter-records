@@ -1,0 +1,7 @@
+basically a record filter.  keep it simple for now.
+assume a record is a json object with simple prop:val pairs.
+For each prop, build a list of toggle buttons.  Select one (or multiple)
+then automatically update record list display to reflect the 
+currently selected property value(s).
+
+think R11/R13/... insulation.  

@@ -1,0 +1,73 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "open sans";
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+}
+
+#filters {
+  display: flex;
+}
+
+#records {
+  background-color: #f9f9d2;
+}
+#records .header {
+  display: flex;
+}
+#records .header .cell {
+  flex: 1;
+  text-align: center;
+  border: 1px solid #696;
+  background-color: #afa;
+}
+#records .record {
+  justify-items: center;
+  align-content: space-between;
+  display: none;
+}
+#records .record.selected {
+  display: flex;
+}
+#records .record .cell {
+  flex: 1;
+  text-align: center;
+  border-width: 0 0 1px 0;
+  border-color: #aaa;
+  border-style: solid;
+}
+
+.keyval-list {
+  width: 100px;
+}
+.keyval-list p {
+  padding: 5px;
+  text-align: center;
+  border: 1px solid #333;
+  border-radius: 3px;
+  margin: 2px;
+}
+.keyval-list .key {
+  font-weight: bold;
+  background-color: #aaa;
+}
+.keyval-list .val {
+  cursor: pointer;
+  background-color: #cceaff;
+}
+.keyval-list .val:hover:not(.selected) {
+  background-color: #b3dfff;
+}
+.keyval-list .val.selected {
+  background-color: #33aaff;
+}
+
+/*# sourceMappingURL=style.css.map */

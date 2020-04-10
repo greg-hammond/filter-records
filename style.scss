@@ -1,0 +1,86 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'open sans';
+}
+
+.product {
+    display: flex;
+    flex-direction: column;
+}
+
+#filters {
+    display: flex;
+}
+
+#records {
+    background-color: hsl(60, 75%, 90%);
+
+    & .header {
+        display: flex;
+
+        & .cell {
+            flex: 1;
+            text-align: center;
+            border: 1px solid #696;
+            background-color: #afa;
+        }
+    }
+
+    & .record {
+        justify-items: center;
+        align-content: space-between;
+
+        display: none;
+
+        &.selected {
+            display: flex;
+        }
+
+        & .cell {
+            flex: 1;
+            text-align: center;
+            border-width: 0 0 1px 0;
+            border-color: #aaa;
+            border-style: solid;
+        }
+    }
+}
+
+.keyval-list {
+
+    width: 100px;
+
+    & p {
+        padding: 5px;
+        text-align: center;
+        border: 1px solid #333;
+        border-radius: 3px;
+        margin: 2px;
+    }
+
+    & .key {
+        font-weight: bold;
+        background-color: #aaa;
+    }
+
+    & .val {
+        $color: hsl(205, 100%, 90%);
+        cursor: pointer;
+
+        background-color: $color;
+
+        &:hover:not(.selected) { 
+            background-color: darken($color, 5%);
+        }
+
+        &.selected {
+            background-color: darken($color, 30%);
+        }
+    }
+}
