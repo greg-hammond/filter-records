@@ -3,19 +3,22 @@
 
 
 // TODO:
-// - deselect one filter / all filters
 // - add record header line
 // - add "select" button (that's the point - we're trying to determine 1 record )
 // - test with another data set.  this code should be completely generic - each json file should provide what's needed.
-
+// - filters themselves should react to other filters.  e.g. if i pick "R-19", the other filter 
+//   values should indicate whether (or how many) matches there are for each attribute.  
+//   might get icky...
+//   sort records by columns
 
 
 const init = async () => {
 
     const data = await loadJSON("data/161insul.json");
-    const {columns, filterKeys, records} = data;
+    let {title, columns, filterKeys, records} = data; // object destructuring assignment
 
     const filterDiv = document.querySelector("#filters");
+    const headerDiv = document.querySelector("#header");
     const recordDiv = document.querySelector("#records");
 
 
@@ -45,12 +48,11 @@ const init = async () => {
         div.setAttribute("data-key", key);
 
         // create filter key/header button
-        addElem(div, "p", "key", key);
-
+        addElem(div, "p", key, "key");
 
         // create buttons for each filter value for key
         values[key].forEach(val => {
-            let el = addElem(div, "p", "val", val);
+            let el = addElem(div, "p", val, "val");
             el.addEventListener("click", setFilterValue);
         });
 
@@ -60,35 +62,93 @@ const init = async () => {
 
     //----- build out the record DOM
 
-    // build the column header row
-    let div = document.createElement("div");
-    div.classList.add("header");
-    columns.forEach(col => addElem(div, "p", "cell", col));
-    recordDiv.append(div);
+    const buildHeader = () => {
 
-    // build record rows
-    records.forEach( rec => {
+        // build the column header row
         let div = document.createElement("div");
-        div.classList.add("record", "selected");
-        div.setAttribute("data-id", rec.id);  // so I can connect records and divs
-        columns.forEach( col => addElem(div, "p", "cell", rec[col]));
-        recordDiv.append(div);
-    })
+        div.classList.add("row", "header");
+        columns.forEach(col => {
+            let elem = addElem(div, "p", col, "cell");
+            // add click handling on header cells for sorting by column
+            elem.addEventListener("click", sortColumn);
+        });
+        headerDiv.append(div);
+    }
 
 
-    // click handler for all filter item value buttons
+
+    const buildRecords = () => {
+
+        recordDiv.innerHTML = "";   // @@kludge-o-matic
+
+        // build record rows
+        records.forEach( rec => {
+            let div = document.createElement("div");
+            div.classList.add("record", "row", "selected");
+            div.setAttribute("data-id", rec.id);  // so I can connect records and divs
+            columns.forEach( col => addElem(div, "p", rec[col], "cell"));
+            recordDiv.append(div);
+        })
+
+
+    }
+
+
+
+    // filter button click handler
     // use traditional function syntax so 'this' is the clicked button
+    //
     function setFilterValue() {
         // loop through all buttons for this filter value group
         // set the clicked one as selected, all others as not.
 
-        this.parentNode.querySelectorAll(".val").forEach(itm => {
-            let classes = itm.classList;
-            (itm === this) ? classes.add("selected") : classes.remove("selected");
-        });
+        if(this.classList.contains("selected")) {
+            // we clicked to de-select the already-selected one.
+            this.classList.remove("selected");
+
+        } else {
+            // we select the one that was clicked, de-select all others.
+            this.parentNode.querySelectorAll(".val").forEach(itm => {
+                itm.classList.toggle("selected", itm === this);
+            });    
+        }
 
         // now filter recs against this value!
         updateRecordDisplay();
+    }
+
+
+    // column header click handler
+    // sort by clicked column - attach "ascending" class to the .header.cell
+    // again, old-school function syntax to preserve 'this'
+    // easiest will be to sort input array and rebuild/replace the DOM, i think...
+    // this sorts everything as string :-( --> need ot handle numeric sort.
+    // 
+    function sortColumn() {
+
+        // this works, but doesn't handle numeric sort correctly.
+        
+        const sortKey = this.textContent;
+        this.classList.toggle("ascending");
+        const sortDir = this.classList.contains("ascending") ? -1 : 1;
+        records = records.sort( (a, b) => {
+            return a[sortKey].toUpperCase() < b[sortKey].toUpperCase() ? sortDir : -sortDir;
+        })
+
+        // this was supposed to be a slick new way of doing it - that might
+        // intelligently distinguish between string and numeric sort needs...
+        // but it didn't do anything at all.
+
+        // const collator = new Intl.Collator(undefined, {
+        //     numeric: true,
+        //     sensitivity: 'base',
+            
+        // })
+        // records = records.sort(collator.compare);
+        // console.log(records);
+
+        buildRecords();
+
     }
 
 
@@ -119,14 +179,17 @@ const init = async () => {
                     }
                 }
             });
-            // find the record in the DOM
-            let div = recordDiv.querySelector("div[data-id='" + rec.id + "']");
-            let classes = div.classList;
-            (pass) ? classes.add("selected") : classes.remove("selected");
-        });
 
+            // find the record in the DOM
+            let div = recordDiv.querySelector("div[data-id='" + rec.id + "']");            
+            div.classList.toggle("selected", pass);
+
+        });
     }
 
+    // build record DOM
+    buildHeader();
+    buildRecords();
 
     // do initial record display
     updateRecordDisplay();
@@ -135,15 +198,23 @@ const init = async () => {
 
 
 async function loadJSON(file) {
-    const resp = await fetch(file);
+    const resp = await fetch(file, {
+        method: 'GET',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        }
+    });
     data = await resp.json();
     return data;
 };
 
-// helper function.  create element of 'type' with 'classlist' and 'text' content, and append to 'parent'
-const addElem = (parent, type, classlist, text) => {
+// helper function.  create element of 'type' with 'text' content, and append to 'parent'
+// multiple classnames can be passed in as parameters 4-n.  spread operator handles nicely.
+const addElem = (parent, type, text, ...classlist) => {
     let elem = document.createElement(type);
-    elem.classList = classlist;
+    elem.classList.add(...classlist);
     elem.textContent = text;
     parent.appendChild(elem);
     return elem;

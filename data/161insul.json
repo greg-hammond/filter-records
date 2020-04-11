@@ -1,4 +1,5 @@
 {
+    "title": "Fiberglass Insulation - 161",
     "columns": ["SKU", "R Value","Framing","Width","Facing","Type","Length","SqFt","Pieces","Thickness"],
     "filterKeys": ["R Value", "Framing", "Width", "Facing", "Type"],
     "records": [

@@ -8,59 +8,37 @@ body {
   font-family: "open sans";
 }
 
-.product {
+.wrapper {
   display: flex;
   flex-direction: column;
+  padding: 10px;
 }
 
 #filters {
   display: flex;
-}
-
-#records {
-  background-color: #f9f9d2;
-}
-#records .header {
-  display: flex;
-}
-#records .header .cell {
-  flex: 1;
-  text-align: center;
-  border: 1px solid #696;
-  background-color: #afa;
-}
-#records .record {
-  justify-items: center;
-  align-content: space-between;
-  display: none;
-}
-#records .record.selected {
-  display: flex;
-}
-#records .record .cell {
-  flex: 1;
-  text-align: center;
-  border-width: 0 0 1px 0;
-  border-color: #aaa;
-  border-style: solid;
+  flex-direction: column;
 }
 
 .keyval-list {
-  width: 100px;
+  display: flex;
+  flex-direction: row;
 }
 .keyval-list p {
-  padding: 5px;
+  padding: 3px 15px;
+  font-size: 14px;
   text-align: center;
-  border: 1px solid #333;
-  border-radius: 3px;
   margin: 2px;
 }
 .keyval-list .key {
+  width: 100px;
+  text-align: right;
   font-weight: bold;
-  background-color: #aaa;
 }
 .keyval-list .val {
   cursor: pointer;
+  border: 1px solid #005999;
+  border-radius: 3px;
+  user-select: none;
   background-color: #cceaff;
 }
 .keyval-list .val:hover:not(.selected) {
@@ -68,6 +46,44 @@ body {
 }
 .keyval-list .val.selected {
   background-color: #33aaff;
+}
+
+.row {
+  display: flex;
+  justify-items: center;
+  align-content: space-between;
+  border: 1px solid #999;
+}
+
+.cell {
+  flex: 1;
+  font-size: 14px;
+  text-align: center;
+  padding: 1px;
+}
+
+#header .cell {
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #c9ecc6;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+#header .cell:hover {
+  background-color: hotpink;
+}
+
+#records {
+  background-color: #edf9ec;
+  border: 1px solid #333;
+}
+#records .record:not(.selected) {
+  display: none;
+}
+#records .record:hover {
+  cursor: pointer;
+  background-color: #c9ecc6;
+  outline: 2px solid #36862d;
 }
 
 /*# sourceMappingURL=style.css.map */
