@@ -10,6 +10,9 @@ body {
 
 .wrapper {
   display: flex;
+  width: 70%;
+  max-width: 1000px;
+  margin: 0 auto;
   flex-direction: column;
   padding: 10px;
 }
@@ -17,6 +20,7 @@ body {
 #filters {
   display: flex;
   flex-direction: column;
+  margin: 20px 0;
 }
 
 .keyval-list {
@@ -59,22 +63,22 @@ body {
   flex: 1;
   font-size: 14px;
   text-align: center;
-  padding: 1px;
+  padding: 3px;
 }
 
 #header .cell {
   font-weight: bold;
   cursor: pointer;
-  background-color: #c9ecc6;
+  background-color: #c6dcec;
   padding-top: 5px;
   padding-bottom: 5px;
 }
 #header .cell:hover {
-  background-color: hotpink;
+  background-color: #9fc5df;
 }
 
 #records {
-  background-color: #edf9ec;
+  background-color: #ecf3f9;
   border: 1px solid #333;
 }
 #records .record:not(.selected) {
@@ -82,8 +86,8 @@ body {
 }
 #records .record:hover {
   cursor: pointer;
-  background-color: #c9ecc6;
-  outline: 2px solid #36862d;
+  background-color: #c6dcec;
+  outline: 2px solid #2d6186;
 }
 
 /*# sourceMappingURL=style.css.map */

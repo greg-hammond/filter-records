@@ -1,5 +1,6 @@
 
 // ** needs live server (or similar) for fetch to work........
+// ==> for now, revert to a local script var data = blah blah blah
 
 
 // TODO:
@@ -14,12 +15,15 @@
 
 const init = async () => {
 
-    const data = await loadJSON("data/161insul.json");
-    let {title, columns, filterKeys, records} = data; // object destructuring assignment
+    //const data = await loadJSON("data/161insul.json");
+    const data = __dataBank[161];
+    let {title, columns, records} = data; // object destructuring assignment
 
     const filterDiv = document.querySelector("#filters");
     const headerDiv = document.querySelector("#header");
     const recordDiv = document.querySelector("#records");
+
+    const filterKeys = columns.filter( col => col.filter ).map( col => col.name);
 
 
     // build list of unique values for each filter key/col
@@ -38,6 +42,9 @@ const init = async () => {
         })
     });
 
+
+    //----- add the title
+    document.querySelector("#title").textContent = data.title;
 
     //----- build out the filter DOM
 
@@ -68,7 +75,7 @@ const init = async () => {
         let div = document.createElement("div");
         div.classList.add("row", "header");
         columns.forEach(col => {
-            let elem = addElem(div, "p", col, "cell");
+            let elem = addElem(div, "p", col.name, "cell");
             // add click handling on header cells for sorting by column
             elem.addEventListener("click", sortColumn);
         });
@@ -86,7 +93,7 @@ const init = async () => {
             let div = document.createElement("div");
             div.classList.add("record", "row", "selected");
             div.setAttribute("data-id", rec.id);  // so I can connect records and divs
-            columns.forEach( col => addElem(div, "p", rec[col], "cell"));
+            columns.forEach( col => addElem(div, "p", rec[col.name], "cell"));
             recordDiv.append(div);
         })
 
@@ -126,26 +133,20 @@ const init = async () => {
     // 
     function sortColumn() {
 
-        // this works, but doesn't handle numeric sort correctly.
         
         const sortKey = this.textContent;
+        const column = columns.find( col => col.name === sortKey);
+        const isNumeric = (column) ? column.numeric : false;
+        console.log(isNumeric);
         this.classList.toggle("ascending");
         const sortDir = this.classList.contains("ascending") ? -1 : 1;
         records = records.sort( (a, b) => {
-            return a[sortKey].toUpperCase() < b[sortKey].toUpperCase() ? sortDir : -sortDir;
-        })
 
-        // this was supposed to be a slick new way of doing it - that might
-        // intelligently distinguish between string and numeric sort needs...
-        // but it didn't do anything at all.
+            return (isNumeric) ?
+                (+a[sortKey] < +b[sortKey] ? sortDir : -sortDir) :
+                (a[sortKey].toUpperCase() < b[sortKey].toUpperCase() ? sortDir : -sortDir);
 
-        // const collator = new Intl.Collator(undefined, {
-        //     numeric: true,
-        //     sensitivity: 'base',
-            
-        // })
-        // records = records.sort(collator.compare);
-        // console.log(records);
+        });
 
         buildRecords();
 
@@ -196,19 +197,19 @@ const init = async () => {
 
 }
 
-
-async function loadJSON(file) {
-    const resp = await fetch(file, {
-        method: 'GET',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
-    data = await resp.json();
-    return data;
-};
+// not using for now.  loading variable directly from script data.js
+// async function loadJSON(file) {
+//     const resp = await fetch(file, {
+//         method: 'GET',
+//         mode: 'no-cors',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'Access-Control-Allow-Origin': '*'
+//         }
+//     });
+//     data = await resp.json();
+//     return data;
+// };
 
 // helper function.  create element of 'type' with 'text' content, and append to 'parent'
 // multiple classnames can be passed in as parameters 4-n.  spread operator handles nicely.

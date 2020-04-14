@@ -11,6 +11,9 @@ body {
 
 .wrapper {
     display: flex;
+    width: 70%;
+    max-width: 1000px;
+    margin: 0 auto;
     flex-direction: column;
     padding: 10px;
 }
@@ -19,6 +22,7 @@ body {
 #filters {
     display: flex;
     flex-direction: column;
+    margin: 20px 0;
 }
 
 .keyval-list {
@@ -71,12 +75,12 @@ body {
     flex: 1;
     font-size: 14px;
     text-align: center;
-    padding: 1px;
+    padding: 3px;
 }
 
 #header {
 
-    $color: hsl(114, 50%, 95%);  // non-DRY
+    $color: hsl(205, 50%, 95%);  // non-DRY
 
     .cell {
         font-weight: bold;
@@ -85,13 +89,13 @@ body {
         padding-top: 5px;
         padding-bottom: 5px;
         &:hover {
-            background-color: hotpink;
+            background-color: darken($color, 20%);
         }
     }
 }
 
 #records {
-    $color: hsl(114, 50%, 95%);
+    $color: hsl(205, 50%, 95%);
     background-color: $color;
     border: 1px solid #333;
 
