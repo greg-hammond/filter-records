@@ -1,29 +1,17 @@
 
-// ** needs live server (or similar) for fetch to work........
-// ==> for now, revert to a local script var data = blah blah blah
-
-
-// TODO:
-// - add record header line
-// - add "select" button (that's the point - we're trying to determine 1 record )
-// - test with another data set.  this code should be completely generic - each json file should provide what's needed.
-// - filters themselves should react to other filters.  e.g. if i pick "R-19", the other filter 
-//   values should indicate whether (or how many) matches there are for each attribute.  
-//   might get icky...
-//   sort records by columns
-
 
 const init = async () => {
 
-    //const data = await loadJSON("data/161insul.json");
     const data = __dataBank[161];
     let {title, columns, records} = data; // object destructuring assignment
 
     const filterDiv = document.querySelector("#filters");
-    const headerDiv = document.querySelector("#header");
-    const recordDiv = document.querySelector("#records");
+    
+    // this will house an array of records in the DOM (after built)
+    let recordList = {};
 
-    const filterKeys = columns.filter( col => col.filter ).map( col => col.name);
+    // grab all column names that are defined as filters.
+    const filterKeys = columns.filter(col => col.filter ).map(col => col.name);
 
 
     // build list of unique values for each filter key/col
@@ -44,10 +32,10 @@ const init = async () => {
 
 
     //----- add the title
-    document.querySelector("#title").textContent = data.title;
+    document.querySelector("#title").textContent = title;
 
-    //----- build out the filter DOM
 
+    //----- build the filter UI
     filterKeys.forEach( key => {
 
         let div = document.createElement("div");
@@ -67,36 +55,40 @@ const init = async () => {
     })
 
 
-    //----- build out the record DOM
+    //----- build record column header
 
     const buildHeader = () => {
 
         // build the column header row
-        let div = document.createElement("div");
-        div.classList.add("row", "header");
+        const header = document.querySelector("#header");
+        const div = addElem(header, "div", "", "row", "header");
         columns.forEach(col => {
             let elem = addElem(div, "p", col.name, "cell");
-            // add click handling on header cells for sorting by column
-            elem.addEventListener("click", sortColumn);
+            elem.addEventListener("click", sortColumn);  // sort column on click
         });
-        headerDiv.append(div);
     }
 
-
+    //----- build out record DOM from record data
 
     const buildRecords = () => {
 
-        recordDiv.innerHTML = "";   // @@kludge-o-matic
+        // build records into the UI
+        // note that 'records' object not used after DOM built
 
-        // build record rows
+        const listDiv = document.querySelector("#records");
+
         records.forEach( rec => {
             let div = document.createElement("div");
             div.classList.add("record", "row", "selected");
             div.setAttribute("data-id", rec.id);  // so I can connect records and divs
-            columns.forEach( col => addElem(div, "p", rec[col.name], "cell"));
-            recordDiv.append(div);
-        })
+            columns.forEach( col => {
+                addElem(div, "p", rec[col.name], "cell", col.name)
+            });
+            listDiv.append(div);
+        });
 
+        // used for filtering and sorting later
+        recordList = [...listDiv.querySelectorAll(".record")];
 
     }
 
@@ -120,8 +112,8 @@ const init = async () => {
             });    
         }
 
-        // now filter recs against this value!
-        updateRecordDisplay();
+        // now filter recs against this value
+        filterRecords();
     }
 
 
@@ -129,38 +121,53 @@ const init = async () => {
     // sort by clicked column - attach "ascending" class to the .header.cell
     // again, old-school function syntax to preserve 'this'
     // easiest will be to sort input array and rebuild/replace the DOM, i think...
-    // this sorts everything as string :-( --> need ot handle numeric sort.
-    // 
+    // nope.  rebuilding kills our filtering.  need to sort in place.
     function sortColumn() {
 
-        
+        // figure out which column we're sorting...        
         const sortKey = this.textContent;
+        // get the class name (sort key with spaces xlated to dashes)
+        // see buildRecords above
+        //const clsName = sortKey.split(" ").join("-");
+        //console.log(clsName);
+
         const column = columns.find( col => col.name === sortKey);
+        // ... and whether it's numeric...
         const isNumeric = (column) ? column.numeric : false;
-        console.log(isNumeric);
+        // ... and which way (asc or desc)
         this.classList.toggle("ascending");
         const sortDir = this.classList.contains("ascending") ? -1 : 1;
-        records = records.sort( (a, b) => {
 
-            return (isNumeric) ?
-                (+a[sortKey] < +b[sortKey] ? sortDir : -sortDir) :
-                (a[sortKey].toUpperCase() < b[sortKey].toUpperCase() ? sortDir : -sortDir);
+        recordList.sort( (a, b) => {
+                
+            // I stuffed the col name as a class for each cell.
+            // so now we can retrieve the column we want using getElementsByClassName.
+            // this returns an HTML collection, so we take the [0]th one.
+            let aval = a.getElementsByClassName(sortKey)[0].textContent;
+            let bval = b.getElementsByClassName(sortKey)[0].textContent;
 
-        });
+            return (isNumeric) ? 
+                (+aval < +bval ? sortDir : -sortDir) :
+                ( aval.toUpperCase() < bval.toUpperCase()) ? sortDir : -sortDir;
+        })
 
-        buildRecords();
+        // finally, map to reinsert back into container, in order.
+        .map( itm => itm.parentNode.appendChild(itm));
+
 
     }
 
 
-    //----- display records with filtering.
-
-    const updateRecordDisplay = () => {
+    //----- filter record display based on selected filters
+    //      called initially, and when any filter settings are changed by user
+    //
+    const filterRecords = () => {
 
         let filters = {};
 
         [...filterDiv.querySelectorAll("[data-key]")].forEach(div => {
             let key = div.getAttribute("data-key");
+            // only 0 or 1 filter values per attribute supported, for now
             let valBtn = div.querySelector(".selected");
             let val = (valBtn) ? valBtn.textContent : "";
             filters[key] = val;
@@ -169,21 +176,20 @@ const init = async () => {
 
         // loop on records and perform filtering
 
-        records.forEach( rec => {
+        recordList.forEach( rec => {
             let pass = true;
-            // loop against filter keys, not all record columns!
             Object.keys(filters).forEach(key => {
                 let val = filters[key];
-                if (val) {
-                    if (rec[key] && rec[key] != val) {
+                if (val) {  // only perform check when this filter key has a value
+                    let recVal = rec.getElementsByClassName(key)[0].textContent;
+                    if (recVal && recVal != val) {
                         pass = false;
                     }
                 }
             });
 
-            // find the record in the DOM
-            let div = recordDiv.querySelector("div[data-id='" + rec.id + "']");            
-            div.classList.toggle("selected", pass);
+            // apply filter to this record
+            rec.classList.toggle("selected", pass);
 
         });
     }
@@ -192,24 +198,8 @@ const init = async () => {
     buildHeader();
     buildRecords();
 
-    // do initial record display
-    updateRecordDisplay();
-
 }
 
-// not using for now.  loading variable directly from script data.js
-// async function loadJSON(file) {
-//     const resp = await fetch(file, {
-//         method: 'GET',
-//         mode: 'no-cors',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'Access-Control-Allow-Origin': '*'
-//         }
-//     });
-//     data = await resp.json();
-//     return data;
-// };
 
 // helper function.  create element of 'type' with 'text' content, and append to 'parent'
 // multiple classnames can be passed in as parameters 4-n.  spread operator handles nicely.
