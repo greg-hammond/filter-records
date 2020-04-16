@@ -2,7 +2,7 @@
 
 const init = () => {
 
-    const data = __dataBank[161];
+    const data = __dataBank[179];
     let { title, columns, records } = data; // object destructuring assignment
 
     const filterDiv = document.querySelector("#filters");
@@ -79,7 +79,9 @@ const init = () => {
         records.forEach(rec => {
             let div = addElem(listDiv, "div", "", "record", "row", "selected");
             columns.forEach(col => {
-                addElem(div, "p", rec[col.name], "cell", col.name)
+                let cell = addElem(div, "p", rec[col.name], "cell");
+                // this supports retrieving data by column - see getColData
+                cell.setAttribute("data-col", col.name);
             });
         });
 
@@ -113,6 +115,11 @@ const init = () => {
     }
 
 
+    // helper function - fetch column data for a record
+    // called by filter code and sort code
+    //
+    const getColData = (rec, col) => rec.querySelector(`[data-col=${col}]`).textContent;
+
 
 
 
@@ -138,8 +145,8 @@ const init = () => {
             let pass = true;
             Object.keys(filters).forEach(key => {
                 let val = filters[key];
-                if (val) {  // only perform check when this filter key has a value
-                    let recVal = rec.getElementsByClassName(key)[0].textContent;
+                if (val) { 
+                    let recVal = getColData(rec, key);
                     if (recVal && recVal != val) {
                         pass = false;
                     }
@@ -151,6 +158,8 @@ const init = () => {
 
         });
     }
+
+
 
 
     // column header click handler
@@ -168,11 +177,9 @@ const init = () => {
 
         recordList.sort((a, b) => {
 
-            // I stuffed the col name as a class for each cell.
-            // so now we can retrieve the column we want using getElementsByClassName.
-            // this returns an HTML collection, so we take the [0]th one.
-            let aval = a.getElementsByClassName(sortKey)[0].textContent;
-            let bval = b.getElementsByClassName(sortKey)[0].textContent;
+            // fetch column data for each record
+            let aval = getColData(a, sortKey);
+            let bval = getColData(b, sortKey);
 
             return (isNumeric) ?
                 (+aval < +bval ? sortDir : -sortDir) :
@@ -190,6 +197,8 @@ const init = () => {
     buildRecords();
 
 } // end init
+
+
 
 
 // helper function.  create element of 'type' with 'text' content, and append to 'parent'
